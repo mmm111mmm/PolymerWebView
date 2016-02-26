@@ -1,10 +1,13 @@
 package com.newfivefour.polymerwebview;
 
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -21,6 +24,17 @@ public class MainActivityActivity extends AppCompatActivity {
 
     mWebview = (WebView) findViewById(R.id.webView);
 
+    mWebview.getSettings().setAppCacheMaxSize( 5 * 1024 * 1024 ); // 5MB
+    mWebview.getSettings().setAppCachePath( getApplicationContext().getCacheDir().getAbsolutePath() );
+    mWebview.getSettings().setAllowFileAccess( true );
+    mWebview.getSettings().setAppCacheEnabled( true );
+    mWebview.getSettings().setCacheMode( WebSettings.LOAD_DEFAULT ); // load online by default
+
+    if ( !isNetworkAvailable() ) { // loading offline
+      Log.d("HIYA", "No network");
+      mWebview.getSettings().setCacheMode( WebSettings.LOAD_CACHE_ELSE_NETWORK );
+    }
+
     WebSettings webSettings = mWebview.getSettings();
 
     // Enable JavaScript.
@@ -35,7 +49,7 @@ public class MainActivityActivity extends AppCompatActivity {
       public boolean shouldOverrideUrlLoading(WebView view, String url) {
 
         // Handle local URLs.
-        if (Uri.parse(url).getHost().contains("chromestatus.com")) {
+        if (Uri.parse(url).getHost().contains("newfivefour.com")) {
           return false;
         }
 
@@ -54,7 +68,7 @@ public class MainActivityActivity extends AppCompatActivity {
       }
     });
 
-    mWebview.loadUrl("https://www.chromestatus.com/");
+    mWebview.loadUrl("https://www.newfivefour.com/");
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
       WebView.setWebContentsDebuggingEnabled(true);
@@ -69,6 +83,12 @@ public class MainActivityActivity extends AppCompatActivity {
     } else {
       super.onBackPressed();
     }
+  }
+
+  private boolean isNetworkAvailable() {
+    ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService( CONNECTIVITY_SERVICE );
+    NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+    return activeNetworkInfo != null && activeNetworkInfo.isConnected();
   }
 
 }
